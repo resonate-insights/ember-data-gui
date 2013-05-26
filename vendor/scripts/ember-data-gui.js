@@ -7,7 +7,8 @@
 (function () {
   window.DS_GUI = {
     root : 'ember-data-gui-root',
-    isShown : false
+    isShown : false,
+    html : {}
   };
 
 })();
@@ -18,22 +19,23 @@
       models : []
     };
 
-    Ember.run.once(function () {
+    Ember.run(function () {
       for (var prop in app) {
-        var emberName,
-            subclass;
+        var property,
+            superclass,
+            fields = [];
 
         if( app.hasOwnProperty( prop ) ) {
-          prop = app[prop];
-          emberName = prop[Ember.GUID_KEY + '_name'];
-          debugger;
-          if (emberName) {
-            subclass = emberName.split('.')[1];
-            if (subclass !== 'Router') {
-              models.models.push({
-                name : emberName
-              });
-            }
+          property = app[prop];
+          superclass = property['superclass'] ? property['superclass'].toString() : null;
+          if (superclass === 'DS.Model') {
+            property['eachComputedProperty'](function (name, meta) {
+              fields.push(name.toString());
+            });
+            models.models.push({
+              name : property.toString(),
+              propertyNames : fields
+            });
           }
         }
       }
@@ -45,6 +47,22 @@
   DS_GUI.collectModels = collectModels;
 })();
 
+(function () {
+  var source =
+      '<table>' +
+          '<thead>' +
+            '<tr>' +
+              '{{#each propertyNames}}' +
+              '<th>{{this}}</th>' +
+              '{{/each}}' +
+            '</tr>' +
+          '</thead>' +
+      '</table>';
+
+  var template = Handlebars.compile(source);
+
+  DS_GUI.html.table = template;
+})();
 
 (function () {
   var showGui = function () {
@@ -58,7 +76,7 @@
             '{{/each}}' +
                 '</ul>',
         template = Handlebars.compile(source);
-    $('#' + DS_GUI.root).append(template(models));
+    $('#' + DS_GUI.root).append(DS_GUI.html.table(models.models[0]));
     DS_GUI.isShown = true;
   };
 
