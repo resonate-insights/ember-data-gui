@@ -1372,7 +1372,6 @@
        */
       createRecord: function(type, properties, transaction) {
         properties = properties || {};
-        debugger;
 
         // Create a new instance of the model `type` and put it
         // into the specified `transaction`. If no transaction is
